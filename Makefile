@@ -182,6 +182,7 @@ UPROGS=\
 	_wc\
 	_zombie\
 	_trylseek\
+	_quit\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
