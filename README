@@ -1,51 +1,63 @@
-NOTE: we have stopped maintaining the x86 version of xv6, and switched
-our efforts to the RISC-V version
-(https://github.com/mit-pdos/xv6-riscv.git)
+# xv6 System Call Implementation: `lseek()`
 
-xv6 is a re-implementation of Dennis Ritchie's and Ken Thompson's Unix
-Version 6 (v6).  xv6 loosely follows the structure and style of v6,
-but is implemented for a modern x86-based multiprocessor using ANSI C.
+An implementation of the standard `lseek()` system call added to the **xv6** operating system kernel. This project enables file offset manipulation (re-positioning read/write file pointers) across different seek modes for `FD_INODE` file structures.
 
-ACKNOWLEDGMENTS
+---
 
-xv6 is inspired by John Lions's Commentary on UNIX 6th Edition (Peer
-to Peer Communications; ISBN: 1-57398-013-7; 1st edition (June 14,
-2000)). See also https://pdos.csail.mit.edu/6.828/, which
-provides pointers to on-line resources for v6.
+## Features & Enhancements
 
-xv6 borrows code from the following sources:
-    JOS (asm.h, elf.h, mmu.h, bootasm.S, ide.c, console.c, and others)
-    Plan 9 (entryother.S, mp.h, mp.c, lapic.c)
-    FreeBSD (ioapic.c)
-    NetBSD (console.c)
+* **`lseek(fd, offset, whence)`**: Full system call implementation supporting file offset updates.
+* **Supported Seek Modes**:
+  * `SEEK_SET (0)`: Sets the offset relative to the beginning of the file.
+  * `SEEK_CUR (1)`: Adjusts the offset relative to the current file offset position.
+  * `SEEK_END (2)`: Sets the offset relative to the total file size.
+* **Kernel Safety & Concurrency**:
+  * Protects inode access using kernel `ilock()` and `iunlock()` mechanics.
+  * Validates memory and file bounds ($0 \le \text{offset} \le \text{file\_size}$).
+  * Rejects non-seekable structures such as `FD_PIPE`.
+* **Testing Routine**: Integrated `trylseek` user program to verify offset positions across multiple seek operations.
 
-The following people have made contributions: Russ Cox (context switching,
-locking), Cliff Frey (MP), Xiao Yu (MP), Nickolai Zeldovich, and Austin
-Clements.
+---
 
-We are also grateful for the bug reports and patches contributed by Silas
-Boyd-Wickizer, Anton Burtsev, Cody Cutler, Mike CAT, Tej Chajed, eyalz800,
-Nelson Elhage, Saar Ettinger, Alice Ferrazzi, Nathaniel Filardo, Peter
-Froehlich, Yakir Goaron,Shivam Handa, Bryan Henry, Jim Huang, Alexander
-Kapshuk, Anders Kaseorg, kehao95, Wolfgang Keller, Eddie Kohler, Austin
-Liew, Imbar Marinescu, Yandong Mao, Matan Shabtay, Hitoshi Mitake, Carmi
-Merimovich, Mark Morrissey, mtasm, Joel Nider, Greg Price, Ayan Shafqat,
-Eldar Sehayek, Yongming Shen, Cam Tenny, tyfkda, Rafael Ubal, Warren
-Toomey, Stephen Tu, Pablo Ventura, Xi Wang, Keiichi Watanabe, Nicolas
-Wolovick, wxdao, Grant Wu, Jindong Zhang, Icenowy Zheng, and Zou Chang Wei.
+## Modified & Added Files
 
-The code in the files that constitute xv6 is
-Copyright 2006-2018 Frans Kaashoek, Robert Morris, and Russ Cox.
+| File | Description |
+| :--- | :--- |
+| **`fcntl.h`** | Defined `SEEK_SET`, `SEEK_CUR`, and `SEEK_END` macros. |
+| **`sysfile.c`** | Implemented `sys_lseek()` with bound checks and lock management. |
+| **`syscall.h`** | Added `SYS_lseek` system call number definition. |
+| **`syscall.c`** | Registered `sys_lseek` function prototype and trap vector mapping. |
+| **`user.h`** | Declared `lseek(int, int, int)` prototype for user programs. |
+| **`usys.S`** | Added assembly syscall entry trap wrapper for `lseek`. |
+| **`Makefile`** | Included `_trylseek` in `UPROGS` target binaries. |
+| **`trylseek.c`** | User space program demonstrating system call functionality. |
 
-ERROR REPORTS
+---
 
-We don't process error reports (see note on top of this file).
+## How to Run and Test
 
-BUILDING AND RUNNING XV6
+### Prerequisites
+* `qemu-system-i386` or standard `qemu`
+* `gcc` / `make` build chain
 
-To build xv6 on an x86 ELF machine (like Linux or FreeBSD), run
-"make". On non-x86 or non-ELF machines (like OS X, even on x86), you
-will need to install a cross-compiler gcc suite capable of producing
-x86 ELF binaries (see https://pdos.csail.mit.edu/6.828/).
-Then run "make TOOLPREFIX=i386-jos-elf-". Now install the QEMU PC
-simulator and run "make qemu".
+### Steps
+
+1. **Clone the Repository:**
+   ```bash
+   git clone https://github.com/swayam0611/xv6-addinglseek.git
+   cd xv6-addinglseek
+   ```
+
+2. **Build and Boot xv6:**
+   ```bash
+   make qemu-nox
+   ```
+
+3. **Execute the `trylseek` User Program:**
+   Inside the xv6 shell, run `trylseek` against the built-in `README` file:
+   ```bash
+   $ trylseek README
+   ```
+
+
+---
