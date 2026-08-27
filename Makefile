@@ -31,8 +31,8 @@ OBJS = \
 # Cross-compiling (e.g., on Mac OS X)
 # TOOLPREFIX = i386-jos-elf
 
-# Using native tools (e.g., on X86 Linux)
-# TOOLPREFIX = i686-linux-gnu-
+# required on MAC to run x86
+TOOLPREFIX = i686-linux-gnu-
 
 # Try to infer the correct TOOLPREFIX if not set
 ifndef TOOLPREFIX
