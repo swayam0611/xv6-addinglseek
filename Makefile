@@ -31,7 +31,7 @@ OBJS = \
 # Cross-compiling (e.g., on Mac OS X)
 # TOOLPREFIX = i386-jos-elf
 
-# Using native tools (e.g., on X86 Linux)
+# required on MAC to run x86
 TOOLPREFIX = i686-linux-gnu-
 
 # Try to infer the correct TOOLPREFIX if not set
@@ -182,6 +182,7 @@ UPROGS=\
 	_wc\
 	_zombie\
 	_trylseek\
+	_quit\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)

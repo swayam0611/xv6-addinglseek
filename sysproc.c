@@ -89,3 +89,11 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+//writes to qemu poweroff port
+int
+sys_quit(void)
+{
+  outw(0x604, 0x0 | 0x2000);
+  return -1;
+}
