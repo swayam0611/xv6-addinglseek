@@ -442,3 +442,28 @@ sys_pipe(void)
   fd[1] = fd1;
   return 0;
 }
+
+int sys_lseek(void) {
+	struct file* f;
+	int seek_val, seek_type;
+	
+	if (argfd(0, 0, &f) < 0 || argint(1, &seek_val) < 0 || argint(2, &seek_type) < 0) return -1;
+	
+	if (f->type == FD_PIPE) return -1;
+	
+	if (f->type == FD_INODE) {
+		ilock(f->ip);
+		int new_off;
+		if (seek_type == 0) new_off = seek_val;
+		else if (seek_type == 1) new_off = f->off + seek_val;
+		else if (seek_type == 2) new_off = f->ip->size + seek_val;
+		else {iunlock(f->ip); return -1;}
+		
+		if (new_off < 0 || new_off > f->ip->size) {iunlock(f->ip); return -1;}
+		
+		f->off = new_off;
+		
+		iunlock(f->ip);
+		return new_off;
+	}
+}
