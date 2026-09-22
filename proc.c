@@ -111,6 +111,8 @@ found:
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
+  
+  p->priority = 1; // swayam: default priority at allocproc() set to mentioned value (might change later)
 
   return p;
 }
@@ -199,6 +201,7 @@ fork(void)
   np->sz = curproc->sz;
   np->parent = curproc;
   *np->tf = *curproc->tf;
+  np->priority = curproc->priority; // swayam: at fork the new process inherits parent process' priority
 
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
@@ -210,7 +213,7 @@ fork(void)
 
   safestrcpy(np->name, curproc->name, sizeof(curproc->name));
 
-  pid = np->pid;
+  pid = np->pid;	
 
   acquire(&ptable.lock);
 
@@ -323,35 +326,51 @@ void
 scheduler(void)
 {
   struct proc *p;
+  struct proc *high_p;
   struct cpu *c = mycpu();
+  struct proc *start_p = ptable.proc;
   c->proc = 0;
   
   for(;;){
     // Enable interrupts on this processor.
     sti();
+    
+    high_p = 0;
 
-    // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
-        continue;
 
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
-      c->proc = p;
-      switchuvm(p);
-      p->state = RUNNING;
+    // ensuring start_p is within bounds
+    if (start_p >= &ptable.proc[NPROC])
+      start_p = ptable.proc;
 
-      swtch(&(c->scheduler), p->context);
+    p = start_p;
+    int hasEncounteredEqual = 0;
+    
+    do {
+      if (p->state == RUNNABLE) {
+        if (high_p == 0 || p->priority > high_p->priority)
+          high_p = p;
+      }
+      p++;
+      if (p >= &ptable.proc[NPROC])
+        p = ptable.proc;
+    } while(p != start_p);
+
+    if (high_p != 0) {
+      c->proc = high_p;
+      switchuvm(high_p);
+      high_p->state = RUNNING;
+      
+      lapicsetquantum(high_p->priority);
+      
+      swtch(&(c->scheduler), high_p->context);
       switchkvm();
-
-      // Process is done running for now.
-      // It should have changed its p->state before coming back.
       c->proc = 0;
+
+      // advance start_p to the process AFTER high_p for fair tie-breaking
+      start_p = high_p + 1;
     }
     release(&ptable.lock);
-
   }
 }
 
@@ -531,4 +550,18 @@ procdump(void)
     }
     cprintf("\n");
   }
+}
+
+int
+nice(int pr)
+{
+  if (pr < 1 || pr > 32)
+    return -1;
+  struct proc* p = myproc();
+  
+  acquire(&ptable.lock);  
+  p->priority = pr; 
+  release(&ptable.lock);
+  
+  return 0;
 }

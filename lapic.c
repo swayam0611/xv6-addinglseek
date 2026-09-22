@@ -65,7 +65,7 @@ lapicinit(void)
   // If xv6 cared more about precise timekeeping,
   // TICR would be calibrated using an external time source.
   lapicw(TDCR, X1);
-  lapicw(TIMER, PERIODIC | (T_IRQ0 + IRQ_TIMER));
+  lapicw(TIMER, (T_IRQ0 + IRQ_TIMER)); // swayam: removed PERIODIC, to configure lapic timer in one-shot mode
   lapicw(TICR, 10000000);
 
   // Disable logical interrupt lines.
@@ -226,4 +226,18 @@ cmostime(struct rtcdate *r)
 
   *r = t1;
   r->year += 2000;
+}
+
+//swayam: this function sets hardware timer proportional to process' priority
+void
+lapicsetquantum(int priority)
+{
+  if(!lapic)
+    return;
+    
+  if (priority < 1)
+    priority = 1; // working with a positive priority based system where time quantum is directly proportional to priority value
+    
+  lapicw(TICR, priority * 10000000);
+    
 }

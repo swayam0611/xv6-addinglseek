@@ -97,3 +97,12 @@ sys_quit(void)
   outw(0x604, 0x0 | 0x2000);
   return -1;
 }
+
+int
+sys_nice(void)
+{
+  int pr;
+  if (argint(0, &pr) < 0)
+    return -1;
+  return nice(pr);
+}
