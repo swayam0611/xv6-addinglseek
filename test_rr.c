@@ -6,11 +6,10 @@
 int
 main(void)
 {
-  nice(10); // Set parent priority to 10
-  
+  nice(10);
+
   for (int i = 0; i < 3; i++) {
     if (fork() == 0) {
-      // All 3 children inherit priority 10
       for (int j = 0; j < 5; j++) {
         printf(1, "Child %d running step %d\n", i + 1, j);
         sleep(1);

@@ -6,15 +6,14 @@ void
 count_work(int prio, int id)
 {
   nice(prio);
-  
+
   volatile unsigned int count = 0;
   int start_time = uptime();
-  
-  // Run loop for ~200 ticks
+
   while (uptime() - start_time < 200) {
     count++;
   }
-  
+
   printf(1, "Child %d [Priority %d]: Completed %d iterations\n", id, prio, count);
   exit();
 }
