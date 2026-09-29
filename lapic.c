@@ -234,10 +234,10 @@ lapicsetquantum(int priority)
 {
   if(!lapic)
     return;
-    
+
   if (priority < 1)
     priority = 1; // working with a positive priority based system where time quantum is directly proportional to priority value
-    
+
   lapicw(TICR, priority * 10000000);
-    
+
 }

@@ -111,7 +111,7 @@ found:
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
-  
+
   p->priority = 1; // swayam: default priority at allocproc() set to mentioned value (might change later)
 
   return p;
@@ -213,7 +213,7 @@ fork(void)
 
   safestrcpy(np->name, curproc->name, sizeof(curproc->name));
 
-  pid = np->pid;	
+  pid = np->pid;
 
   acquire(&ptable.lock);
 
@@ -334,7 +334,7 @@ scheduler(void)
   for(;;){
     // Enable interrupts on this processor.
     sti();
-    
+
     high_p = 0;
 
     acquire(&ptable.lock);
@@ -345,7 +345,7 @@ scheduler(void)
 
     p = start_p;
     int hasEncounteredEqual = 0;
-    
+
     do {
       if (p->state == RUNNABLE) {
         if (high_p == 0 || p->priority > high_p->priority)
@@ -360,9 +360,9 @@ scheduler(void)
       c->proc = high_p;
       switchuvm(high_p);
       high_p->state = RUNNING;
-      
+
       lapicsetquantum(high_p->priority);
-      
+
       swtch(&(c->scheduler), high_p->context);
       switchkvm();
       c->proc = 0;
@@ -558,10 +558,10 @@ nice(int pr)
   if (pr < 1 || pr > 32)
     return -1;
   struct proc* p = myproc();
-  
-  acquire(&ptable.lock);  
-  p->priority = pr; 
+
+  acquire(&ptable.lock);
+  p->priority = pr;
   release(&ptable.lock);
-  
+
   return 0;
 }
